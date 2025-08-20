@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repositorio Académico Digital</title>
+    <!-- Google API Client -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .login-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error-message {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .success-message {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .app-container {
+            display: none;
+        }
+        .app-container.active {
+            display: block;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            color: white;
+        }
+        .header-left h1 {
+            font-size: 2.5rem;
+        }
+        .header-left p {
+            opacity: 0.9;
+        }
+        .user-info {
+            text-align: right;
+        }
+        .user-role {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 1);
+        }
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            color: #3498db;
+        }
+        .stat-label {
+            color: #666;
+        }
+        .upload-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .admin-only {
+            display: none;
+        }
+        .admin-only.show {
+            display: block;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #3498db;
+        }
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .document-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .document-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .document-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .btn {
+            padding: 0.7rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SECTION -->
+    <div class="login-container" id="loginSection">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>📚 Repositorio Académico</h1>
+                <p>Sistema de Gestión de Documentos Académicos</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+                <button type="submit" class="login-btn" id="loginBtn">Iniciar Sesión</button>
+            </form>
+            <div id="loginMessage"></div>
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
+                <p><strong>Usuarios de prueba:</strong></p>
+                <p>Admin: administración / administrador123</p>
+                <p>Usuario: usuario / usuario123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app-container" id="appContainer">
+        <div class="container">
+            <header class="header">
+                <div class="header-left">
+                    <h1>📚 Repositorio Académico</h1>
+                    <p>Gestión centralizada de proyectos, tesis e investigaciones</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div id="currentUser">Usuario</div>
+                        <div class="user-role" id="userRole">Invitado</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </header>
+
+            <!-- ESTADÍSTICAS -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDocs">0</div>
+                    <div class="stat-label">Total Documentos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTesis">0</div>
+                    <div class="stat-label">Tesis</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProyectos">0</div>
+                    <div class="stat-label">Proyectos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalInvestigaciones">0</div>
+                    <div class="stat-label">Investigaciones</div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE SUBIDA (Solo Admin) -->
+            <div class="upload-section admin-only" id="uploadSection">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">Arrastra documentos aquí o haz clic para seleccionar</p>
+                <p style="color: #666;">Soporta: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX</p>
+                <input type="file" id="fileInput" style="display: none;" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+            </div>
+
+            <!-- GRID DE DOCUMENTOS -->
+            <div class="documents-grid" id="documentsGrid">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === CONFIGURACIÓN ===
+        const CLIENT_ID = '106425099009-s88ncepnbt016nchllevel0pqe5uoo6e.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyDodxeFX0L8_aVCPyEIC_XsKN5sZb0cC8o'; // Necesitas agregar tu API Key
+        const SPREADSHEET_ID = '1UWYc8DosCKo4Fbrbdz3yNgpgLkWX2pDlwD-4LRlGxgM';
+        const USER_SHEET = 'Usuarios';
+        const FILE_SHEET = 'Archivos';
+        const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+        const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+
+        // === VARIABLES GLOBALES ===
+        let currentUser = null;
+        let isAdmin = false;
+        let documents = [];
+        let users = {
+            'administración': { password: 'administrador123', role: 'admin' },
+            'usuario': { password: 'usuario123', role: 'user' }
+        };
+        let gapi_inited = false;
+
+        // === FUNCIONES DE MENSAJES ===
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('loginMessage');
+            messageDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // === INICIALIZAR GOOGLE API ===
+        async function initializeGapi() {
+            try {
+                await gapi.load('client', async () => {
+                    await gapi.client.init({
+                        apiKey: API_KEY,
+                        discoveryDocs: [DISCOVERY_DOC],
+                    });
+                    gapi_inited = true;
+                    console.log("Google API inicializada correctamente");
+                    showMessage("API de Google inicializada correctamente", "success");
+                    // Intentar cargar usuarios desde la hoja
+                    await loadUsersFromSheet();
+                });
+            } catch (error) {
+                console.error("Error al inicializar Google API:", error);
+                showMessage("Error al conectar con Google Sheets. Usando usuarios locales.", "error");
+            }
+        }
+
+        // === CARGAR USUARIOS DESDE GOOGLE SHEETS ===
+        async function loadUsersFromSheet() {
+            if (!gapi_inited) {
+                console.log("API no inicializada, usando usuarios locales");
+                return;
+            }
+
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${USER_SHEET}!A:C`
+                });
+                
+                const rows = response.result.values;
+                if (rows && rows.length > 1) {
+                    users = {};
+                    rows.slice(1).forEach(row => {
+                        if (row[0] && row[1]) {
+                            const username = row[0].trim();
+                            const password = row[1].trim();
+                            const role = (row[2] || 'user').trim();
+                            users[username] = { password, role };
+                        }
+                    });
+                    console.log("Usuarios cargados desde Google Sheets:", Object.keys(users));
+                    showMessage("Usuarios cargados desde Google Sheets", "success");
+                } else {
+                    console.log("No se encontraron usuarios en la hoja, usando usuarios locales");
+                }
+            } catch (error) {
+                console.error("Error al cargar usuarios:", error);
+                showMessage("No se pudieron cargar usuarios desde Google Sheets. Usando usuarios locales.", "error");
+            }
+        }
+
+        // === INICIO DE SESIÓN ===
+        function handleLogin(event) {
+            event.preventDefault();
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Verificando...';
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Verificar credenciales
+            if (!users[username]) {
+                showMessage('❌ Usuario no encontrado.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+                return;
+            }
+
+            if (users[username].password !== password) {
+                showMessage('❌ Contraseña incorrecta.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+                return;
+            }
+
+            // Login exitoso
+            currentUser = { name: username, role: users[username].role };
+            isAdmin = users[username].role === 'admin';
+
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = isAdmin ? 'Administrador' : 'Usuario';
+
+            // Mostrar/ocultar secciones según el rol
+            document.querySelectorAll('.admin-only').forEach(el => {
+                if (isAdmin) {
+                    el.classList.add('show');
+                } else {
+                    el.classList.remove('show');
+                }
+            });
+
+            // Cambiar vista
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+
+            // Cargar documentos
+            loadDocumentsFromSheet();
+
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Iniciar Sesión';
+        }
+
+        // === CARGAR DOCUMENTOS DESDE GOOGLE SHEETS ===
+        async function loadDocumentsFromSheet() {
+            if (!gapi_inited) {
+                // Usar documentos de ejemplo
+                documents = [
+                    {
+                        id: '1',
+                        title: 'Ejemplo de Tesis: Inteligencia Artificial en Educación',
+                        author: 'Juan Pérez',
+                        type: 'tesis',
+                        year: 2024,
+                        keywords: ['IA', 'Educación', 'Machine Learning'],
+                        description: 'Investigación sobre el impacto de la IA en procesos educativos',
+                        uploadDate: '2024-01-15',
+                        fileSize: '2.5MB',
+                        fileUrl: '#'
+                    },
+                    {
+                        id: '2',
+                        title: 'Proyecto: Sistema de Gestión Académica',
+                        author: 'María García',
+                        type: 'proyecto',
+                        year: 2024,
+                        keywords: ['Gestión', 'Académica', 'Web'],
+                        description: 'Desarrollo de sistema web para gestión académica',
+                        uploadDate: '2024-02-10',
+                        fileSize: '1.8MB',
+                        fileUrl: '#'
+                    }
+                ];
+                loadDocuments();
+                updateStats();
+                return;
+            }
+
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${FILE_SHEET}!A:J`
+                });
+                
+                const rows = response.result.values;
+                documents = [];
+                
+                if (rows && rows.length > 1) {
+                    rows.slice(1).forEach(row => {
+                        if (row[0] && row[1]) { // Al menos ID y título
+                            documents.push({
+                                id: row[0] || '',
+                                title: row[1] || 'Sin título',
+                                author: row[2] || 'Autor desconocido',
+                                type: row[3] || 'documento',
+                                year: parseInt(row[4]) || new Date().getFullYear(),
+                                keywords: row[5] ? row[5].split(',').map(k => k.trim()) : [],
+                                description: row[6] || 'Sin descripción',
+                                uploadDate: row[7] || '',
+                                fileSize: row[8] || '',
+                                fileUrl: row[9] || '#'
+                            });
+                        }
+                    });
+                }
+                
+                loadDocuments();
+                updateStats();
+            } catch (error) {
+                console.error("Error al cargar documentos:", error);
+                // Usar documentos de ejemplo en caso de error
+                documents = [
+                    {
+                        id: '1',
+                        title: 'Ejemplo de Tesis (Error al cargar desde Sheets)',
+                        author: 'Sistema',
+                        type: 'tesis',
+                        year: 2024,
+                        keywords: ['Ejemplo'],
+                        description: 'Documento de ejemplo - Error al conectar con Google Sheets',
+                        uploadDate: '2024-01-01',
+                        fileSize: '0MB',
+                        fileUrl: '#'
+                    }
+                ];
+                loadDocuments();
+                updateStats();
+            }
+        }
+
+        // === MOSTRAR DOCUMENTOS ===
+        function loadDocuments() {
+            const grid = document.getElementById('documentsGrid');
+            grid.innerHTML = '';
+            
+            if (documents.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: white;">
+                        <h3>No hay documentos disponibles</h3>
+                        <p>Los documentos aparecerán aquí una vez que se carguen desde Google Sheets</p>
+                    </div>
+                `;
+                return;
+            }
+
+            documents.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = 'document-card';
+                card.innerHTML = `
+                    <div class="document-title">${doc.title}</div>
+                    <div class="document-meta">
+                        📅 ${doc.year} | 👤 ${doc.author} | 📂 ${doc.type}
+                    </div>
+                    <div style="margin: 1rem 0; font-size: 0.9rem; color: #666;">
+                        ${doc.description}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <a href="${doc.fileUrl}" target="_blank" class="btn btn-primary">
+                            👁️ Ver Documento
+                        </a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // === ACTUALIZAR ESTADÍSTICAS ===
+        function updateStats() {
+            document.getElementById('totalDocs').textContent = documents.length;
+            document.getElementById('totalTesis').textContent = 
+                documents.filter(d => d.type === 'tesis').length;
+            document.getElementById('totalProyectos').textContent = 
+                documents.filter(d => d.type === 'proyecto').length;
+            document.getElementById('totalInvestigaciones').textContent = 
+                documents.filter(d => d.type === 'investigacion').length;
+        }
+
+        // === CERRAR SESIÓN ===
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('appContainer').classList.remove('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginMessage').innerHTML = '';
+        }
+
+        // === EVENTOS ===
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Inicializar Google API
+            initializeGapi();
+        });
+    </script>
+</body>
+</html>
