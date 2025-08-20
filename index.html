@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repositorio Académico Digital</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .login-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error-message {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .success-message {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .warning-message {
+            background: rgba(243, 156, 18, 0.1);
+            color: #f39c12;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .app-container {
+            display: none;
+        }
+        .app-container.active {
+            display: block;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            color: white;
+        }
+        .header-left h1 {
+            font-size: 2.5rem;
+        }
+        .header-left p {
+            opacity: 0.9;
+        }
+        .user-info {
+            text-align: right;
+        }
+        .user-role {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 1);
+        }
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            color: #3498db;
+        }
+        .stat-label {
+            color: #666;
+        }
+        .upload-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .admin-only {
+            display: none;
+        }
+        .admin-only.show {
+            display: block;
+        }
+        .connection-status {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .status-dot.online {
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+        .status-dot.offline {
+            background: #e74c3c;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.05);
+        }
+        .upload-area.dragover {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+        }
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .document-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .document-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .document-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .btn {
+            padding: 0.7rem 1.3rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        .notification.success {
+            background: #2ecc71;
+        }
+        .notification.error {
+            background: #e74c3c;
+        }
+        .notification.warning {
+            background: #f39c12;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SECTION -->
+    <div class="login-container" id="loginSection">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>📚 Repositorio Académico</h1>
+                <p>Sistema de Gestión de Documentos Académicos</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+                <button type="submit" class="login-btn" id="loginBtn">Iniciar Sesión</button>
+            </form>
+            <div id="loginMessage"></div>
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
+                <p><strong>Usuarios de prueba:</strong></p>
+                <p>Admin: administración / administrador123</p>
+                <p>Usuario: usuario / usuario123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app-container" id="appContainer">
+        <div class="container">
+            <header class="header">
+                <div class="header-left">
+                    <h1>📚 Repositorio Académico</h1>
+                    <p>Gestión centralizada de proyectos, tesis e investigaciones</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div id="currentUser">Usuario</div>
+                        <div class="user-role" id="userRole">Invitado</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </header>
+
+            <!-- ESTADO DE CONEXIÓN -->
+            <div class="connection-status">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">🔗 Estado del Sistema</h3>
+                <div class="status-indicator">
+                    <div class="status-dot offline" id="statusDot"></div>
+                    <span id="connectionStatus">Modo Local - Sin conexión a Google APIs</span>
+                </div>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;" id="statusDetails">
+                    El sistema está funcionando en modo local con datos de ejemplo.
+                </div>
+            </div>
+
+            <!-- ESTADÍSTICAS -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDocs">0</div>
+                    <div class="stat-label">Total Documentos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTesis">0</div>
+                    <div class="stat-label">Tesis</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProyectos">0</div>
+                    <div class="stat-label">Proyectos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalInvestigaciones">0</div>
+                    <div class="stat-label">Investigaciones</div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE SUBIDA (Solo Admin) -->
+            <div class="upload-section admin-only" id="uploadSection">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">📤 Simular Subida de Documento</h3>
+                <p style="color: #666; margin-bottom: 1rem;">
+                    <strong>Nota:</strong> En modo local, los archivos no se suben realmente. Esta es una demostración de la funcionalidad.
+                </p>
+                <div class="upload-area" id="uploadArea">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">Haz clic para simular subida de archivo</p>
+                    <p style="color: #666;">Esta funcionalidad requiere configuración de Google APIs</p>
+                </div>
+            </div>
+
+            <!-- GRID DE DOCUMENTOS -->
+            <div class="documents-grid" id="documentsGrid">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICACIÓN -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // === VARIABLES GLOBALES ===
+        let currentUser = null;
+        let isAdmin = false;
+        let documents = [];
+        let googleApiAvailable = false;
+        
+        // Usuarios locales (para demostración)
+        const users = {
+            'administración': { password: 'administrador123', role: 'admin' },
+            'usuario': { password: 'usuario123', role: 'user' }
+        };
+
+        // === FUNCIONES DE UTILIDAD ===
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('loginMessage');
+            messageDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function updateConnectionStatus(connected = false, message = '') {
+            const statusDot = document.getElementById('statusDot');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusDetails = document.getElementById('statusDetails');
+            
+            if (connected) {
+                statusDot.className = 'status-dot online';
+                connectionStatus.textContent = 'Conectado a Google APIs';
+                statusDetails.textContent = 'Sistema funcionando con Google Sheets y Drive.';
+            } else {
+                statusDot.className = 'status-dot offline';
+                connectionStatus.textContent = 'Modo Local - Sin conexión a Google APIs';
+                statusDetails.textContent = message || 'El sistema está funcionando con datos de ejemplo locales.';
+            }
+        }
+
+        // === DATOS DE EJEMPLO ===
+        function loadExampleDocuments() {
+            documents = [
+                {
+                    id: '1',
+                    title: 'Inteligencia Artificial en Educación: Un Enfoque Innovador',
+                    author: 'Dr. Juan Pérez García',
+                    type: 'tesis',
+                    year: 2024,
+                    keywords: ['Inteligencia Artificial', 'Educación', 'Machine Learning', 'Pedagogía'],
+                    description: 'Investigación doctoral sobre la implementación de sistemas de IA en procesos educativos universitarios y su impacto en el aprendizaje estudiantil.',
+                    uploadDate: '2024-01-15',
+                    fileSize: '2.5MB',
+                    fileUrl: '#'
+                },
+                {
+                    id: '2',
+                    title: 'Sistema Web de Gestión Académica Universitaria',
+                    author: 'María García López',
+                    type: 'proyecto',
+                    year: 2024,
+                    keywords: ['Gestión Académica', 'Desarrollo Web', 'Base de Datos', 'PHP'],
+                    description: 'Proyecto de desarrollo de un sistema web completo para la gestión de procesos académicos incluyendo matrículas, calificaciones y reportes.',
+                    uploadDate: '2024-02-10',
+                    fileSize: '1.8MB',
+                    fileUrl: '#'
+                },
+                {
+                    id: '3',
+                    title: 'Análisis de Algoritmos de Aprendizaje Automático',
+                    author: 'Carlos Rodríguez Sánchez',
+                    type: 'investigacion',
+                    year: 2023,
+                    keywords: ['Machine Learning', 'Algoritmos', 'Análisis Comparativo', 'Python'],
+                    description: 'Estudio comparativo de diferentes algoritmos de machine learning aplicados a problemas de clasificación en datasets reales.',
+                    uploadDate: '2023-11-20',
+                    fileSize: '3.2MB',
+                    fileUrl: '#'
+                },
+                {
+                    id: '4',
+                    title: 'Metodologías Ágiles en el Desarrollo de Software',
+                    author: 'Ana Martínez Torres',
+                    type: 'investigacion',
+                    year: 2024,
+                    keywords: ['Metodologías Ágiles', 'Scrum', 'Desarrollo Software', 'Gestión Proyectos'],
+                    description: 'Investigación sobre la efectividad de diferentes metodologías ágiles en equipos de desarrollo de software de tamaño medio.',
+                    uploadDate: '2024-03-05',
+                    fileSize: '2.1MB',
+                    fileUrl: '#'
+                },
+                {
+                    id: '5',
+                    title: 'Blockchain y Criptomonedas: Impacto Económico',
+                    author: 'Roberto Silva Mendoza',
+                    type: 'tesis',
+                    year: 2023,
+                    keywords: ['Blockchain', 'Criptomonedas', 'Economía Digital', 'Fintech'],
+                    description: 'Tesis de maestría sobre el impacto de las tecnologías blockchain y criptomonedas en los sistemas financieros tradicionales.',
+                    uploadDate: '2023-12-01',
+                    fileSize: '4.7MB',
+                    fileUrl: '#'
+                }
+            ];
+        }
+
+        // === INICIO DE SESIÓN ===
+        function handleLogin(event) {
+            event.preventDefault();
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Verificando...';
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Verificar credenciales
+            if (!users[username]) {
+                showMessage('❌ Usuario no encontrado.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+                return;
+            }
+
+            if (users[username].password !== password) {
+                showMessage('❌ Contraseña incorrecta.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+                return;
+            }
+
+            // Login exitoso
+            currentUser = { name: username, role: users[username].role };
+            isAdmin = users[username].role === 'admin';
+
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = isAdmin ? 'Administrador' : 'Usuario';
+
+            // Mostrar/ocultar secciones según el rol
+            document.querySelectorAll('.admin-only').forEach(el => {
+                if (isAdmin) {
+                    el.classList.add('show');
+                } else {
+                    el.classList.remove('show');
+                }
+            });
+
+            // Cambiar vista
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+
+            // Cargar documentos de ejemplo
+            loadExampleDocuments();
+            loadDocuments();
+            updateStats();
+
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Iniciar Sesión';
+            
+            showNotification(`¡Bienvenido, ${currentUser.name}!`, "success");
+        }
+
+        // === MOSTRAR DOCUMENTOS ===
+        function loadDocuments() {
+            const grid = document.getElementById('documentsGrid');
+            grid.innerHTML = '';
+            
+            if (documents.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: white;">
+                        <h3>No hay documentos disponibles</h3>
+                        <p>Los documentos aparecerán aquí una vez que se carguen.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            documents.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = 'document-card';
+                card.innerHTML = `
+                    <div class="document-title">${doc.title}</div>
+                    <div class="document-meta">
+                        📅 ${doc.year} | 👤 ${doc.author} | 📂 ${doc.type}
+                    </div>
+                    <div style="margin: 1rem 0; font-size: 0.9rem; color: #666; line-height: 1.5;">
+                        ${doc.description}
+                    </div>
+                    ${doc.keywords && doc.keywords.length > 0 ? `
+                    <div style="margin: 1rem 0;">
+                        ${doc.keywords.map(keyword => `<span style="background: #3498db; color: white; padding: 0.2rem 0.5rem; border-radius: 15px; font-size: 0.8rem; margin-right: 0.5rem; margin-bottom: 0.5rem; display: inline-block;">${keyword}</span>`).join('')}
+                    </div>
+                    ` : ''}
+                    <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <button onclick="viewDocument('${doc.id}')" class="btn btn-primary">
+                            👁️ Ver Documento
+                        </button>
+                        <small style="color: #999;">${doc.fileSize}</small>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // === ACTUALIZAR ESTADÍSTICAS ===
+        function updateStats() {
+            document.getElementById('totalDocs').textContent = documents.length;
+            document.getElementById('totalTesis').textContent = 
+                documents.filter(d => d.type === 'tesis').length;
+            document.getElementById('totalProyectos').textContent = 
+                documents.filter(d => d.type === 'proyecto').length;
+            document.getElementById('totalInvestigaciones').textContent = 
+                documents.filter(d => d.type === 'investigacion').length;
+        }
+
+        // === VER DOCUMENTO ===
+        function viewDocument(docId) {
+            const doc = documents.find(d => d.id === docId);
+            if (doc) {
+                showNotification(`Abriendo: ${doc.title}`, 'success');
+                // En un sistema real, aquí se abriría el documento
+                console.log('Ver documento:', doc);
+            }
+        }
+
+        // === MANEJO DE ÁREA DE SUBIDA ===
+        function setupUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('click', () => {
+                showNotification('Funcionalidad de subida no disponible en modo local', 'warning');
+                console.log('Para habilitar la funcionalidad completa, configure las credenciales de Google APIs');
+            });
+        }
+
+        // === CERRAR SESIÓN ===
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            documents = [];
+            
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('appContainer').classList.remove('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginMessage').innerHTML = '';
+            
+            showNotification('Sesión cerrada exitosamente', 'success');
+        }
+
+        // === INICIALIZACIÓN ===
+        document.addEventListener('DOMContentLoaded', () => {
+            // Evento de login
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Configurar área de subida
+            setupUploadArea();
+            
+            // Actualizar estado de conexión
+            updateConnectionStatus(false, 'Para conectar con Google APIs, configure las credenciales en el código.');
+            
+            showMessage('Sistema iniciado en modo local. Use las credenciales de prueba para acceder.', 'warning');
+        });
+    </script>
+</body>
+</html>
