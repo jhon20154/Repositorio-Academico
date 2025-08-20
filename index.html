@@ -604,7 +604,7 @@
 
     <script>
         // === CONFIGURACIÓN ===
-        const CLIENT_ID = 106425099009-s88ncepnbt016nchllevel0pqe5uoo6e.apps.googleusercontent.com; // ← Reemplaza con tu Client ID
+        const CLIENT_ID = 'const CLIENT_ID = '106425099009-s88ncepnb016nchlleve0pqe5uo06e.apps.googleusercontent.com';'; // ← Reemplaza con tu Client ID
         const SPREADSHEET_ID = '1UWYc8DosCKo4Fbrbdz3yNgpgLkWX2pDlwD-4LRlGxgM '; // ← Reemplaza con tu ID de Google Sheets
         const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
 
@@ -653,8 +653,38 @@
         }
 
         function signInWithGoogle() {
-            gapi.auth2.getAuthInstance().signIn();
+    if (!gapi || !gapi.auth2) {
+        alert('Error: Google API no está disponible.');
+        return;
+    }
+
+    gapi.auth2.getAuthInstance().signIn().then(async () => {
+        const user = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
+        currentUser = {
+            name: user.getName(),
+            email: user.getEmail()
+        };
+
+        // Verifica si es admin por correo
+        if (user.getEmail() === 'tuemail.admin@gmail.com') {
+            isAdmin = true;
         }
+
+        document.getElementById('currentUser').textContent = currentUser.name;
+        document.getElementById('userRole').textContent = isAdmin ? 'Administrador' : 'Usuario';
+
+        const adminElements = document.querySelectorAll('.admin-only');
+        adminElements.forEach(el => el.classList.toggle('show', isAdmin));
+
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContainer').classList.add('active');
+
+        loadDocumentsFromSheet(); // Cargar datos desde Sheets
+    }).catch(e => {
+        console.error('Error de autenticación:', e);
+        alert('❌ Error al iniciar sesión con Google.');
+    });
+}
 
         function logout() {
             gapi.auth2.getAuthInstance().signOut();
@@ -949,5 +979,26 @@
             initGapi(); // Iniciar Google API
         });
     </script>
+    <script src="https://apis.google.com/js/api.js"></script>
+<script>
+    // Inicializar gapi cuando esté listo
+    function initGapi() {
+        gapi.load('client:auth2', async () => {
+            try {
+                await gapi.client.init({
+                    clientId: CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets'
+                });
+                console.log("Google API inicializada correctamente");
+            } catch (error) {
+                console.error("Error al cargar Google API:", error);
+            }
+        });
+    }
+
+    // Llama a initGapi cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', initGapi);
+</script>
 </body>
 </html>
+
