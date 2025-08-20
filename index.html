@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Repositorio Académico Digital</title>
-    <!-- Cargar Google API Client -->
+    <!-- Google API Client -->
     <script src="https://apis.google.com/js/api.js"></script>
     <style>
         * {
@@ -44,6 +44,30 @@
         .login-header p {
             color: #666;
             font-size: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
         .login-btn {
             width: 100%;
@@ -202,11 +226,19 @@
                 <h1>📚 Repositorio Académico</h1>
                 <p>Sistema de Gestión de Documentos Académicos</p>
             </div>
-            <button type="button" class="login-btn" onclick="signInWithGoogle()">
-                🔐 Iniciar sesión con Google
-            </button>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+                <button type="submit" class="login-btn">Iniciar Sesión</button>
+            </form>
             <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
-                <p><strong>Nota:</strong> Se requiere cuenta de Google para acceder.</p>
+                <p><strong>Nota:</strong> Las credenciales están en Google Sheets.</p>
             </div>
         </div>
     </div>
@@ -265,57 +297,85 @@
 
     <script>
         // === CONFIGURACIÓN (REEMPLAZA CON TUS DATOS) ===
-        const CLIENT_ID = '106425099009-s88ncepnbt016nchllevel0pqe5uoo6e.apps.googleusercontent.com'; // ← Tu Client ID
+        const CLIENT_ID = '106425099009-s88ncepnbt016nchllevel0pqe5uoo6e.apps.googleusercontent.com'; // ← Tu Client ID de Google Cloud
         const SPREADSHEET_ID = '1UWYc8DosCKo4Fbrbdz3yNgpgLkWX2pDlwD-4LRlGxgM'; // ← ID de tu Google Sheet
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
+        const USER_SHEET = 'Usuarios';
+        const FILE_SHEET = 'Archivos';
+        const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 
         // === VARIABLES GLOBALES ===
         let currentUser = null;
         let isAdmin = false;
         let currentUploadFile = null;
         let documents = [];
+        let users = {};
 
         // === INICIALIZAR GOOGLE API ===
         function initGapi() {
-            gapi.load('client:auth2', async () => {
+            gapi.load('client', async () => {
                 await gapi.client.init({
                     clientId: CLIENT_ID,
                     scope: SCOPES
                 });
-                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-                updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+                console.log("Google API inicializada");
+                // Cargar usuarios al iniciar
+                await loadUsersFromSheet();
             });
         }
 
-        function updateSigninStatus(isSignedIn) {
-            if (isSignedIn) {
-                const user = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
-                currentUser = {
-                    name: user.getName(),
-                    email: user.getEmail()
-                };
-                isAdmin = currentUser.email === 'jhon2015@gmail.com'; // ← Cambia por tu correo admin
-
-                document.getElementById('currentUser').textContent = currentUser.name;
-                document.getElementById('userRole').textContent = isAdmin ? 'Administrador' : 'Usuario';
-
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('show', isAdmin));
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('appContainer').classList.add('active');
-
-                loadDocumentsFromSheet();
-            } else {
-                document.getElementById('loginSection').style.display = 'flex';
-                document.getElementById('appContainer').classList.remove('active');
+        // === CARGAR USUARIOS DESDE GOOGLE SHEETS ===
+        async function loadUsersFromSheet() {
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${USER_SHEET}!A:C`
+                });
+                const rows = response.result.values;
+                users = {};
+                if (rows && rows.length > 1) {
+                    rows.slice(1).forEach(row => {
+                        const username = row[0];
+                        const password = row[1];
+                        const role = row[2] || 'user';
+                        users[username] = { password, role };
+                    });
+                }
+                console.log("Usuarios cargados:", Object.keys(users));
+            } catch (error) {
+                console.error("Error al cargar usuarios:", error);
+                alert("No se pudo cargar la lista de usuarios. Verifica tu conexión o permisos.");
             }
         }
 
-        function signInWithGoogle() {
-            gapi.auth2.getAuthInstance().signIn();
-        }
+        // === INICIO DE SESIÓN ===
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-        function logout() {
-            gapi.auth2.getAuthInstance().signOut();
+            if (!users[username]) {
+                alert('❌ Usuario no encontrado.');
+                return;
+            }
+
+            if (users[username].password !== password) {
+                alert('❌ Contraseña incorrecta.');
+                return;
+            }
+
+            currentUser = { name: username, role: users[username].role };
+            isAdmin = users[username].role === 'admin';
+
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = isAdmin ? 'Administrador' : 'Usuario';
+
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('show', isAdmin));
+
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+
+            // Cargar documentos después del login
+            loadDocumentsFromSheet();
         }
 
         // === CARGAR DOCUMENTOS DESDE GOOGLE SHEETS ===
@@ -323,34 +383,70 @@
             try {
                 const response = await gapi.client.sheets.spreadsheets.values.get({
                     spreadsheetId: SPREADSHEET_ID,
-                    range: 'Datos!A:J'
+                    range: `${FILE_SHEET}!A:J`
                 });
                 const rows = response.result.values;
+                documents = [];
                 if (rows && rows.length > 1) {
-                    documents = rows.slice(1).map(row => ({
-                        id: row[0],
-                        title: row[1],
-                        author: row[2],
-                        type: row[3] || 'proyecto',
-                        year: parseInt(row[4]) || 2024,
-                        keywords: row[5] ? row[5].split(',').map(k => k.trim()) : [],
-                        description: row[6] || '',
-                        uploadDate: row[7],
-                        fileSize: row[8],
-                        fileUrl: row[9]
-                    }));
-                } else {
-                    documents = [];
+                    rows.slice(1).forEach(row => {
+                        documents.push({
+                            id: row[0],
+                            title: row[1],
+                            author: row[2],
+                            type: row[3],
+                            year: parseInt(row[4]),
+                            keywords: row[5] ? row[5].split(',').map(k => k.trim()) : [],
+                            description: row[6],
+                            uploadDate: row[7],
+                            fileSize: row[8],
+                            fileUrl: row[9]
+                        });
+                    });
                 }
                 loadDocuments();
                 updateStats();
             } catch (error) {
-                console.error('Error al cargar desde Sheets:', error);
-                alert('Error al cargar documentos. Verifica tu hoja de cálculo.');
+                console.error("Error al cargar documentos:", error);
+                alert("Error al cargar documentos.");
             }
         }
 
-        // === SUBIR A DRIVE Y GUARDAR EN SHEETS ===
+        // === MOSTRAR DOCUMENTOS ===
+        function loadDocuments() {
+            const grid = document.getElementById('documentsGrid');
+            grid.innerHTML = '';
+            documents.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = 'document-card';
+                card.innerHTML = `
+                    <div class="document-title">${doc.title}</div>
+                    <div class="document-meta">📅 ${doc.year} | 👤 ${doc.author}</div>
+                    <div style="margin-top: 1rem;">
+                        <a href="${doc.fileUrl}" target="_blank" class="btn btn-primary">👁️ Ver en Drive</a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // === ACTUALIZAR ESTADÍSTICAS ===
+        function updateStats() {
+            document.getElementById('totalDocs').textContent = documents.length;
+            document.getElementById('totalTesis').textContent = documents.filter(d => d.type === 'tesis').length;
+            document.getElementById('totalProyectos').textContent = documents.filter(d => d.type === 'proyecto').length;
+            document.getElementById('totalInvestigaciones').textContent = documents.filter(d => d.type === 'investigacion').length;
+        }
+
+        // === CERRAR SESIÓN ===
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('appContainer').classList.remove('active');
+            document.getElementById('loginForm').reset();
+        }
+
+        // === SUBIR ARCHIVO A GOOGLE DRIVE Y GUARDAR EN SHEETS ===
         async function handleFileUpload(files) {
             if (!isAdmin) return;
 
@@ -397,7 +493,7 @@
 
                 await gapi.client.sheets.spreadsheets.values.append({
                     spreadsheetId: SPREADSHEET_ID,
-                    range: 'Datos!A:J',
+                    range: `${FILE_SHEET}!A:J`,
                     valueInputOption: 'RAW',
                     resource: { values }
                 });
@@ -410,32 +506,9 @@
             }
         }
 
-        function loadDocuments() {
-            const grid = document.getElementById('documentsGrid');
-            grid.innerHTML = '';
-            documents.forEach(doc => {
-                const card = document.createElement('div');
-                card.className = 'document-card';
-                card.innerHTML = `
-                    <div class="document-title">${doc.title}</div>
-                    <div class="document-meta">📅 ${doc.year} | 👤 ${doc.author}</div>
-                    <div style="margin-top: 1rem;">
-                        <a href="${doc.fileUrl}" target="_blank" class="btn btn-primary">👁️ Ver en Drive</a>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function updateStats() {
-            document.getElementById('totalDocs').textContent = documents.length;
-            document.getElementById('totalTesis').textContent = documents.filter(d => d.type === 'tesis').length;
-            document.getElementById('totalProyectos').textContent = documents.filter(d => d.type === 'proyecto').length;
-            document.getElementById('totalInvestigaciones').textContent = documents.filter(d => d.type === 'investigacion').length;
-        }
-
         // === EVENTOS ===
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('fileInput').addEventListener('change', e => handleFileUpload(e.target.files));
             document.querySelector('.upload-area')?.addEventListener('click', () => document.getElementById('fileInput').click());
             initGapi();
