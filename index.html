@@ -9,8 +9,7 @@
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* (Se mantiene todo tu CSS original, sin cambios) */
-* {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -365,11 +364,10 @@
         .notification.show {
             transform: translateX(0);
         }   
- </style>
+    </style>
 </head>
 <body>
-    <!-- (Se mantiene todo tu HTML original de login, app, modal, notificaciones, etc.) -->
-<!-- LOGIN SECTION -->
+    <!-- LOGIN SECTION -->
     <div class="login-container" id="loginSection">
         <div class="login-card">
             <div class="login-header">
@@ -427,10 +425,10 @@
 
             <!-- AUTENTICACIÓN GOOGLE (Solo Admin) -->
             <div class="auth-section admin-only" id="authSection">
-                <h3 style="margin-bottom: 1rem; color: #2c3e50;">🔑 Autenticación Google</h3>
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">🔒 Autenticación Google</h3>
                 <p style="margin-bottom: 1rem; color: #666;">Para subir archivos a Google Drive, necesitas autenticarte:</p>
                 <button id="authorizeBtn" class="auth-btn" onclick="handleAuthClick()">
-                    🔐 Autorizar Google Drive
+                    🔑 Autorizar Google Drive
                 </button>
                 <button id="signoutBtn" class="auth-btn" onclick="handleSignoutClick()" style="display: none; background: #dc3545;">
                     🚪 Cerrar sesión Google
@@ -531,6 +529,7 @@
 
     <!-- NOTIFICACIÓN -->
     <div id="notification" class="notification"></div>
+
     <script>
         // === CONFIGURACIÓN ===
         const CLIENT_ID = '106425099009-s88ncepnbt016nchllevel0pqe5uoo6e.apps.googleusercontent.com';
@@ -558,6 +557,48 @@
         let is_signed_in = false;
         let currentFile = null;
         let tokenClient;
+
+        // === FUNCIONES DE MENSAJES ===
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('loginMessage');
+            messageDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function updateConnectionStatus(isOnline, details = '') {
+            const statusDot = document.getElementById('statusDot');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusDetails = document.getElementById('statusDetails');
+
+            if (isOnline) {
+                statusDot.className = 'status-dot online';
+                connectionStatus.textContent = 'Conectado a Google APIs';
+                statusDetails.textContent = 'Sistema funcionando correctamente';
+            } else {
+                statusDot.className = 'status-dot offline';
+                connectionStatus.textContent = 'Desconectado';
+                statusDetails.textContent = details || 'No se pudo conectar con Google APIs';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
 
         // === INICIALIZAR GOOGLE API ===
         async function initializeGapi() {
@@ -626,8 +667,7 @@
             return gapi.client.getToken().access_token;
         }
 
-        // (Se mantienen todas tus funciones de mensajes, login, loadUsersFromSheet, loadDocumentsFromSheet,
-// === CARGAR USUARIOS DESDE GOOGLE SHEETS ===
+        // === CARGAR USUARIOS DESDE GOOGLE SHEETS ===
         async function loadUsersFromSheet() {
             if (!gapi_inited) {
                 console.log("API no inicializada, usando usuarios locales");
@@ -675,14 +715,14 @@
 
             // Verificar credenciales
             if (!users[username]) {
-                showMessage('❌ Usuario no encontrado.');
+                showMessage('⚠ Usuario no encontrado.');
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Iniciar Sesión';
                 return;
             }
 
             if (users[username].password !== password) {
-                showMessage('❌ Contraseña incorrecta.');
+                showMessage('⚠ Contraseña incorrecta.');
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Iniciar Sesión';
                 return;
@@ -921,9 +961,8 @@
             currentFile = null;
             document.getElementById('uploadForm').reset();
         }
-        // uploadToGoogleDrive, saveToGoogleSheets, drag & drop, logout, etc.)
 
-        // Modificación en uploadToGoogleDrive: obtener token desde GIS
+        // === SUBIR A GOOGLE DRIVE ===
         async function uploadToGoogleDrive(file, metadata) {
             try {
                 const submitBtn = document.getElementById('submitUploadBtn');
@@ -991,6 +1030,70 @@
             }
         }
 
+        // === GUARDAR EN GOOGLE SHEETS ===
+        async function saveToGoogleSheets(docData) {
+            try {
+                const values = [[
+                    docData.id,
+                    docData.title,
+                    docData.author,
+                    docData.type,
+                    docData.year,
+                    docData.keywords ? docData.keywords.join(', ') : '',
+                    docData.description,
+                    docData.uploadDate,
+                    docData.fileSize,
+                    docData.fileUrl
+                ]];
+
+                await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${FILE_SHEET}!A:J`,
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values }
+                });
+
+                console.log('Documento guardado en Google Sheets');
+            } catch (error) {
+                console.error('Error al guardar en Google Sheets:', error);
+                throw error;
+            }
+        }
+
+        // === CONFIGURAR DRAG & DROP ===
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFileSelect(e.dataTransfer.files);
+            });
+        }
+
+        // === CERRAR SESIÓN ===
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('appContainer').classList.remove('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginMessage').innerHTML = '';
+        }
+
         // === INICIALIZACIÓN ===
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
@@ -1021,4 +1124,5 @@
     </script>
 </body>
 </html>
+
 
